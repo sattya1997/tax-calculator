@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tax Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: auto;
+    }
+
+    .container {
+      max-width: 800px;
+      width: 90%;
+      margin: 20px;
+      padding: 20px;
+      background-color: #fff;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    h1 {
+      text-align: center;
+      color: #4caf50;
+      margin-bottom: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      background-color: #4caf50;
+      color: white;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+      min-width: 60px;
+    }
+
+    .tab:hover,
+    .tab.active {
+      background-color: #007906;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 20px;
+    }
+
+    label {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input[type="number"],
+    select {
+      width: 95%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    input[type="number"]:focus,
+    select:focus {
+      border-color: #4caf50;
+      box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #e7f3e7;
+      border: 1px solid #4caf50;
+      border-radius: 4px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @media (min-width: 601px) {
+      .form-group {
+        flex-direction: row;
+        align-items: center;
+      }
+
+      label {
+        width: 40%;
+        margin-bottom: 0;
+      }
+
+      input[type="number"],
+      select {
+        width: 60%;
+      }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Tax Calculator</h1>
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('simple')">
+        Simple
+      </div>
+      <div class="tab" onclick="showTab('complex')">Complex</div>
+      <div class="tab" onclick="showTab('comparison')">Old vs new</div>
+    </div>
+    <div id="simple" class="tab-content active">
+      <form id="simpleForm">
+        <div class="form-group">
+          <label for="salary">Salary Income (₹):</label>
+          <input type="number" id="salary" name="salary" required />
+        </div>
+        <div class="form-group">
+          <label for="stcg">Short-Term Capital Gains (₹):</label>
+          <input type="number" id="stcg" name="stcg" required />
+        </div>
+        <div class="form-group">
+          <label for="ltcg">Long-Term Capital Gains (₹):</label>
+          <input type="number" id="ltcg" name="ltcg" required />
+        </div>
+        <div class="form-group">
+          <label for="interest">Interest Income (₹):</label>
+          <input type="number" id="interest" name="interest" required />
+        </div>
+        <div class="form-group">
+          <label for="other">Other Income (₹):</label>
+          <input type="number" id="other" name="other" required />
+        </div>
+        <div class="form-group">
+          <label for="regime">Select Tax Regime:</label>
+          <select id="regime" name="regime" required>
+            <option value="new">New Tax Regime</option>
+            <option value="old">Old Tax Regime</option>
+          </select>
+        </div>
+        <button type="button" onclick="calculateTax('simple')">
+          Calculate Tax
+        </button>
+      </form>
+      <div id="simpleResult" class="result" style="display: none" aria-live="polite"></div>
+    </div>
+    <div id="complex" class="tab-content">
+      <form id="complexForm">
+        <div class="form-group">
+          <label for="salaryComplex">Salary Income (₹):</label>
+          <input type="number" id="salaryComplex" name="salary" required />
+        </div>
+        <div class="form-group">
+          <label for="stcgComplex">Short-Term Capital Gains (₹):</label>
+          <input type="number" id="stcgComplex" name="stcg" required />
+        </div>
+        <div class="form-group">
+          <label for="ltcgComplex">Long-Term Capital Gains (₹):</label>
+          <input type="number" id="ltcgComplex" name="ltcg" required />
+        </div>
+        <div class="form-group">
+          <label for="interestComplex">Interest Income (₹):</label>
+          <input type="number" id="interestComplex" name="interest" required />
+        </div>
+        <div class="form-group">
+          <label for="otherComplex">Other Income (₹):</label>
+          <input type="number" id="otherComplex" name="other" required />
+        </div>
+        <div class="form-group">
+          <label for="homeLoanInterest">Home Loan Interest (₹):</label>
+          <input type="number" id="homeLoanInterest" name="homeLoanInterest" />
+        </div>
+        <div class="form-group">
+          <label for="educationLoanInterest">Education Loan Interest (₹):</label>
+          <input type="number" id="educationLoanInterest" name="educationLoanInterest" />
+        </div>
+        <div class="form-group">
+          <label for="medicalExpenses">Medical Expenses (₹):</label>
+          <input type="number" id="medicalExpenses" name="medicalExpenses" />
+        </div>
+        <div class="form-group">
+          <label for="donations">Donations (₹):</label>
+          <input type="number" id="donations" name="donations" />
+        </div>
+        <div class="form-group">
+          <label for="section80C">Section 80C Investments (₹):</label>
+          <input type="number" id="section80C" name="section80C" />
+        </div>
+        <div class="form-group">
+          <label for="section80CCD">Section 80CCD(1B) Investments (₹):</label>
+          <input type="number" id="section80CCD" name="section80CCD" />
+        </div>
+        <div class="form-group">
+          <label for="rentalIncome">Rental Income (₹):</label>
+          <input type="number" id="rentalIncome" name="rentalIncome" />
+        </div>
+        <div class="form-group">
+          <label for="businessIncome">Business Income (₹):</label>
+          <input type="number" id="businessIncome" name="businessIncome" />
+        </div>
+        <div class="form-group">
+          <label for="regimeComplex">Select Tax Regime:</label>
+          <select id="regimeComplex" name="regime" required>
+            <option value="new">New Tax Regime</option>
+            <option value="old">Old Tax Regime</option>
+          </select>
+        </div>
+        <button type="button" onclick="calculateTax('complex')">
+          Calculate Tax
+        </button>
+      </form>
+      <div id="complexResult" class="result" style="display: none"></div>
+    </div>
+    <div id="comparison" class="tab-content">
+      <form id="comparisonForm">
+        <div class="form-group">
+          <label for="salaryComparison">Salary Income (₹):</label>
+          <input type="number" id="salaryComparison" name="salary" required />
+        </div>
+        <div class="form-group">
+          <label for="stcgComparison">Short-Term Capital Gains (₹):</label>
+          <input type="number" id="stcgComparison" name="stcg" required />
+        </div>
+        <div class="form-group">
+          <label for="ltcgComparison">Long-Term Capital Gains (₹):</label>
+          <input type="number" id="ltcgComparison" name="ltcg" required />
+        </div>
+        <div class="form-group">
+          <label for="interestComparison">Interest Income (₹):</label>
+          <input type="number" id="interestComparison" name="interest" required />
+        </div>
+        <div class="form-group">
+          <label for="otherComparison">Other Income (₹):</label>
+          <input type="number" id="otherComparison" name="other" required />
+        </div>
+        <div class="form-group">
+          <label for="homeLoanInterestComparison">Home Loan Interest (₹):</label>
+          <input type="number" id="homeLoanInterestComparison" name="homeLoanInterest" />
+        </div>
+        <div class="form-group">
+          <label for="educationLoanInterestComparison">Education Loan Interest (₹):</label>
+          <input type="number" id="educationLoanInterestComparison" name="educationLoanInterest" />
+        </div>
+        <div class="form-group">
+          <label for="medicalExpensesComparison">Medical Expenses (₹):</label>
+          <input type="number" id="medicalExpensesComparison" name="medicalExpenses" />
+        </div>
+        <div class="form-group">
+          <label for="donationsComparison">Donations (₹):</label>
+          <input type="number" id="donationsComparison" name="donations" />
+        </div>
+        <div class="form-group">
+          <label for="section80CComparison">Section 80C Investments (₹):</label>
+          <input type="number" id="section80CComparison" name="section80C" />
+        </div>
+        <div class="form-group">
+          <label for="section80CCDComparison">Section 80CCD(1B) Investments (₹):</label>
+          <input type="number" id="section80CCDComparison" name="section80CCD" />
+        </div>
+        <div class="form-group">
+          <label for="rentalIncomeComparison">Rental Income (₹):</label>
+          <input type="number" id="rentalIncomeComparison" name="rentalIncome" />
+        </div>
+        <div class="form-group">
+          <label for="businessIncomeComparison">Business Income (₹):</label>
+          <input type="number" id="businessIncomeComparison" name="businessIncome" />
+        </div>
+        <button type="button" onclick="compareTax()">
+          Compare Tax Regimes
+        </button>
+      </form>
+      <div id="comparisonResult" class="result" style="display: none"></div>
+    </div>
+    <canvas id="taxChart" width="400" height="400" style="display: none"></canvas>
+  </div>
+
+  <script>
+    let taxChart; // Declare a variable to store the chart instance
+
+    function renderChart(data) {
+      document.getElementById("taxChart").style.display = "none";
+      const ctx = document.getElementById("taxChart").getContext("2d");
+      if (taxChart) {
+        // If the chart already exists, update its data and options
+        taxChart.data.datasets[0].data = data;
+        taxChart.update();
+      } else {
+        // If the chart doesn't exist, create a new one
+        taxChart = new Chart(ctx, {
+          type: "pie",
+          data: {
+            labels: [
+              "Salary",
+              "STCG",
+              "LTCG",
+              "Interest",
+              "Other",
+              "Rental Income",
+              "Business Income",
+            ],
+            datasets: [
+              {
+                data: data,
+                backgroundColor: [
+                  "#4CAF50",
+                  "#FF6384",
+                  "#36A2EB",
+                  "#FFCE56",
+                  "#FF9F40",
+                  "#8E44AD",
+                  "#3498DB",
+                ],
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: "top",
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    let label = context.label || "";
+                    if (label) {
+                      label += ": ";
+                    }
+                    label += `₹${context.raw.toFixed(2)}`;
+                    return label;
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+    }
+
+    function showTab(tabId) {
+      const tabs = document.querySelectorAll(".tab");
+      const tabContents = document.querySelectorAll(".tab-content");
+      tabs.forEach((tab) => tab.classList.remove("active"));
+      tabContents.forEach((content) => content.classList.remove("active"));
+      document.getElementById(tabId).classList.add("active");
+      document
+        .querySelector(`.tab[onclick="showTab('${tabId}')"]`)
+        .classList.add("active");
+    }
+
+    function calculateTax(mode) {
+      const formId = mode === "simple" ? "simpleForm" : "complexForm";
+      const resultId = mode === "simple" ? "simpleResult" : "complexResult";
+      const form = document.getElementById(formId);
+      const salary = parseFloat(form.querySelector('[name="salary"]').value) || 0;
+      const stcg = parseFloat(form.querySelector('[name="stcg"]').value) || 0;
+      const ltcg = parseFloat(form.querySelector('[name="ltcg"]').value) || 0;
+      const interest =
+        parseFloat(form.querySelector('[name="interest"]').value) || 0;
+      const other =
+        parseFloat(form.querySelector('[name="other"]').value) || 0;
+      const regime = form.querySelector('[name="regime"]').value;
+
+      const homeLoanInterest =
+        mode === "simple"
+          ? 0
+          : parseFloat(
+            form.querySelector('[name="homeLoanInterest"]').value
+          ) || 0;
+      const educationLoanInterest =
+        mode === "simple"
+          ? 0
+          : parseFloat(
+            form.querySelector('[name="educationLoanInterest"]').value
+          ) || 0;
+      const medicalExpenses =
+        mode === "simple"
+          ? 0
+          : parseFloat(
+            form.querySelector('[name="medicalExpenses"]').value
+          ) || 0;
+      const donations =
+        mode === "simple"
+          ? 0
+          : parseFloat(form.querySelector('[name="donations"]').value) || 0;
+      const section80C =
+        mode === "simple"
+          ? 0
+          : parseFloat(form.querySelector('[name="section80C"]').value) || 0;
+      const section80CCD =
+        mode === "simple"
+          ? 0
+          : parseFloat(form.querySelector('[name="section80CCD"]').value) ||
+          0;
+      const rentalIncome =
+        mode === "simple"
+          ? 0
+          : parseFloat(form.querySelector('[name="rentalIncome"]').value) ||
+          0;
+      const businessIncome =
+        mode === "simple"
+          ? 0
+          : parseFloat(form.querySelector('[name="businessIncome"]').value) ||
+          0;
+
+      let totalIncome = salary + interest + other + rentalIncome + businessIncome;
+      let deductions = 0;
+      let netTaxableIncome = totalIncome;
+      let tax = 0;
+
+      if (regime === "new") {
+        if (salary == 0 || salary == undefined || salary < 1) {
+          deductions = 0;
+        } else {
+          deductions = 50000;
+        }
+        netTaxableIncome = Math.max(0, totalIncome - deductions); // Ensure net taxable income is not negative
+
+        // Tax on Salary
+        if (netTaxableIncome <= 300000) {
+          tax = 0;
+        } else if (netTaxableIncome <= 600000) {
+          tax = (netTaxableIncome - 300000) * 0.05;
+        } else if (netTaxableIncome <= 900000) {
+          tax = 15000 + (netTaxableIncome - 600000) * 0.1;
+        } else if (netTaxableIncome <= 1200000) {
+          tax = 45000 + (netTaxableIncome - 900000) * 0.15;
+        } else if (netTaxableIncome <= 1500000) {
+          tax = 90000 + (netTaxableIncome - 1200000) * 0.2;
+        } else {
+          tax = 150000 + (netTaxableIncome - 1500000) * 0.3;
+        }
+
+        // Tax on LTCG
+        if (ltcg > 100000) {
+          tax += (ltcg - 100000) * 0.1;
+        }
+
+        // Tax on STCG
+        tax += stcg * 0.15;
+
+        netTaxableIncome += stcg + Math.max(0, ltcg - 100000);
+        // Rebate under Section 87A
+        if (netTaxableIncome <= 700000) {
+          tax = Math.max(0, tax - 25000);
+        }
+      } else {
+        if (salary == 0 || salary == undefined || salary < 1) {
+          deductions = 0;
+        } else {
+          deductions = 50000;
+        }
+        deductions += homeLoanInterest; // Home Loan Interest
+        deductions += educationLoanInterest; // Education Loan Interest
+        deductions += medicalExpenses; // Medical Expenses
+        deductions += donations; // Donations
+        deductions += section80C; // Section 80C Investments
+        deductions += section80CCD; // Section 80CCD(1B) Investments
+        netTaxableIncome = Math.max(0, totalIncome - deductions); // Ensure net taxable income is not negative
+
+        // Tax on Salary
+        if (netTaxableIncome <= 250000) {
+          tax = 0;
+        } else if (netTaxableIncome <= 500000) {
+          tax = (netTaxableIncome - 250000) * 0.05;
+        } else if (netTaxableIncome <= 1000000) {
+          tax = 12500 + (netTaxableIncome - 500000) * 0.2;
+        } else {
+          tax = 112500 + (netTaxableIncome - 1000000) * 0.3;
+        }
+
+        // Tax on LTCG
+        if (ltcg > 100000) {
+          tax += (ltcg - 100000) * 0.1;
+        }
+
+        // Tax on STCG
+        tax += stcg * 0.15;
+
+        netTaxableIncome += stcg + Math.max(0, ltcg - 100000);
+
+        // Rebate under Section 87A
+        if (netTaxableIncome <= 500000) {
+          tax = Math.max(0, tax - 12500);
+        }
+      }
+
+      totalIncome += ltcg + stcg;
+
+      document.getElementById(resultId).innerText = `Total Tax: ₹${tax.toFixed(2)}`;
+      document.getElementById(resultId).style.display = "block";
+      document.getElementById(resultId).innerHTML = `Total Income: ₹${totalIncome.toFixed(2)}<br>Net Taxable Income: ₹${netTaxableIncome.toFixed(2)}<br>Total Tax Liability: ₹${tax.toFixed(2)}`;
+
+      const element = document.getElementById(resultId).scrollIntoView({ behavior: "smooth" });
+
+      // Render the chart
+      const data = [
+        salary,
+        stcg,
+        ltcg,
+        interest,
+        other,
+        rentalIncome,
+        businessIncome,
+      ];
+      renderChart(data);
+      document.getElementById("taxChart").style.display = "block";
+    }
+
+    function compareTax() {
+      document.getElementById("taxChart").style.display = "none";
+      const form = document.getElementById("comparisonForm");
+      const salary = parseFloat(form.querySelector('[name="salary"]').value) || 0;
+      const stcg = parseFloat(form.querySelector('[name="stcg"]').value) || 0;
+      const ltcg = parseFloat(form.querySelector('[name="ltcg"]').value) || 0;
+      const interest =
+        parseFloat(form.querySelector('[name="interest"]').value) || 0;
+      const other =
+        parseFloat(form.querySelector('[name="other"]').value) || 0;
+      const homeLoanInterest =
+        parseFloat(form.querySelector('[name="homeLoanInterest"]').value) ||
+        0;
+      const educationLoanInterest =
+        parseFloat(
+          form.querySelector('[name="educationLoanInterest"]').value
+        ) || 0;
+      const medicalExpenses =
+        parseFloat(form.querySelector('[name="medicalExpenses"]').value) || 0;
+      const donations =
+        parseFloat(form.querySelector('[name="donations"]').value) || 0;
+      const section80C =
+        parseFloat(form.querySelector('[name="section80C"]').value) || 0;
+      const section80CCD =
+        parseFloat(form.querySelector('[name="section80CCD"]').value) || 0;
+      const rentalIncome =
+        parseFloat(form.querySelector('[name="rentalIncome"]').value) || 0;
+      const businessIncome =
+        parseFloat(form.querySelector('[name="businessIncome"]').value) || 0;
+
+      let totalIncome =
+        salary +
+        interest +
+        other +
+        rentalIncome +
+        businessIncome;
+      let deductionsNew = 50000; // Standard deduction for new regime
+      if(salary == 0) {
+        deductionsNew = 0;
+      }
+      let maxHomeLoanInterest = 200000; // Maximum limit for home loan interest deduction
+      let maxEducationLoanInterest = 50000; // Example maximum limit
+      let maxMedicalExpenses = 25000; // Example maximum limit
+      let maxDonations = 10000; // Example maximum limit
+      let maxSection80C = 150000; // Maximum limit for Section 80C
+      let maxSection80CCD = 50000; // Maximum limit for Section 80CCD
+
+      let deductionsOld = 50000;
+      if(salary == 0) {
+        deductionsOld = 0;
+      }
+      deductionsOld +=
+      Math.min(homeLoanInterest, maxHomeLoanInterest) + 
+      Math.min(educationLoanInterest, maxEducationLoanInterest) + 
+      Math.min(medicalExpenses, maxMedicalExpenses) + 
+      Math.min(donations, maxDonations) + 
+      Math.min(section80C, maxSection80C) + 
+      Math.min(section80CCD, maxSection80CCD);
+
+      let netTaxableIncomeNew = Math.max(0, totalIncome - deductionsNew);
+      let netTaxableIncomeOld = Math.max(0, totalIncome - deductionsOld);
+
+      let taxNew = 0;
+      let taxOld = 0;
+
+      // Calculate tax for new regime
+      if (netTaxableIncomeNew <= 300000) {
+        taxNew = 0;
+        } else if (netTaxableIncomeNew <= 600000) {
+          taxNew = (netTaxableIncomeNew - 300000) * 0.05;
+        } else if (netTaxableIncomeNew <= 900000) {
+          taxNew = 15000 + (netTaxableIncomeNew - 600000) * 0.1;
+        } else if (netTaxableIncomeNew <= 1200000) {
+          taxNew = 45000 + (netTaxableIncomeNew - 900000) * 0.15;
+        } else if (netTaxableIncomeNew <= 1500000) {
+          taxNew = 90000 + (netTaxableIncomeNew - 1200000) * 0.2;
+        } else {
+          taxNew = 150000 + (netTaxableIncomeNew - 1500000) * 0.3;
+        }
+
+      taxNew += stcg * 0.15;
+      if (ltcg > 100000) {
+        taxNew += (ltcg - 100000) * 0.1;
+      }
+
+      netTaxableIncomeNew += stcg + Math.max(0, ltcg - 100000);
+
+      netTaxableIncomeOld+= stcg + Math.max(0, ltcg - 100000);
+
+      if (netTaxableIncomeNew <= 700000) {
+        taxNew = Math.max(0, taxNew - 25000); // Rebate under Section 87A
+      }
+
+      // Calculate tax for old regime
+      if (netTaxableIncomeOld <= 250000) {
+        taxOld = 0;
+      } else if (netTaxableIncomeOld <= 500000) {
+        taxOld = (netTaxableIncomeOld - 250000) * 0.05;
+      } else if (netTaxableIncomeOld <= 1000000) {
+        taxOld = 12500 + (netTaxableIncomeOld - 500000) * 0.2;
+      } else {
+        taxOld = 112500 + (netTaxableIncomeOld - 1000000) * 0.3;
+      }
+
+      taxOld += stcg * 0.15;
+      if (ltcg > 100000) {
+        taxOld += (ltcg - 100000) * 0.1;
+      }
+
+      if (netTaxableIncomeOld <= 500000) {
+        taxOld = Math.max(0, taxNew - 12500); // Rebate under Section 87A
+      }
+      totalIncome += ltcg + stcg;
+      document.getElementById("comparisonResult").style.display = "block";
+      document.getElementById("comparisonResult").innerHTML = `
+        <h3>New Tax Regime</h3>
+        Total Income: ₹${totalIncome.toFixed(2)}<br>
+        Net Taxable Income: ₹${netTaxableIncomeNew.toFixed(2)}<br>
+        Total Tax Liability: ₹${taxNew.toFixed(2)}<br>
+        <h3>Old Tax Regime</h3>
+        Total Income: ₹${totalIncome.toFixed(2)}<br>
+        Net Taxable Income: ₹${netTaxableIncomeOld.toFixed(2)}<br>
+        Total Tax Liability: ₹${taxOld.toFixed(2)}<br>
+        <h3>Recommendation</h3>
+        The better option is: ${taxNew < taxOld ? "New Tax Regime" : "Old Tax Regime"
+        }
+    `;
+
+    const element = document.getElementById('comparisonResult').scrollIntoView({ behavior: "smooth" });
+    }
+
+    function getTaxSavingTips(
+      salary,
+      investments,
+      homeLoanInterest,
+      medicalExpenses,
+      donations
+    ) {
+      const tips = [];
+
+      if (investments < 150000) {
+        tips.push(
+          "Consider investing more in Section 80C instruments like PPF, ELSS, or NSC to maximize your deductions."
+        );
+      }
+
+      if (homeLoanInterest > 0) {
+        tips.push(
+          "You can claim deductions on home loan interest under Section 24(b)."
+        );
+      }
+
+      if (medicalExpenses > 0) {
+        tips.push(
+          "Medical expenses for self and family can be claimed under Section 80D."
+        );
+      }
+
+      if (donations > 0) {
+        tips.push(
+          "Donations to eligible charities can be claimed under Section 80G."
+        );
+      }
+
+      if (salary > 500000 && salary <= 1000000) {
+        tips.push(
+          "Consider using the new tax regime if you have fewer deductions."
+        );
+      } else if (salary > 1000000) {
+        tips.push(
+          "Consider using the old tax regime to maximize your deductions."
+        );
+      }
+
+      return tips;
+    }
+
+    function displayTaxSavingTips(tips) {
+      const tipsContainer = document.getElementById("taxSavingTips");
+      tipsContainer.innerHTML =
+        "<h3>Tax Saving Tips</h3><ul>" +
+        tips.map((tip) => `<li>${tip}</li>`).join("") +
+        "</ul>";
+      tipsContainer.style.display = "block";
+    }
+  </script>
+</body>
+</html>
